@@ -64,7 +64,7 @@ st.set_page_config(
 ##########################################################################
 
 # Set the title of the web app
-st.title(':blue[Spot detection for Elispot assay images. Works best for images smaller than 1000x1000 pixels]')
+st.title(':blue[Spot detection for Elispot assay images]')
 
 st.caption('Application screenshots and source code available [here](https://github.com/ajinkya-kulkarni/PyElispotAnalysis). Sample image to test this application is available [here](https://github.com/ajinkya-kulkarni/PyElispotAnalysis/blob/main/image.tif).', unsafe_allow_html = False)
 
@@ -77,7 +77,7 @@ st.markdown("")
 with st.form(key = 'form1', clear_on_submit = True):
 
 	# Add some text explaining what the user should do next
-	st.markdown(':blue[Upload a single Elispot assay image/slide to be analyzed.]')
+	st.markdown(':blue[Upload a single Elispot assay image/slide to be analyzed. Works best for images smaller than 1000x1000 pixels.]')
 
 	# Add a file uploader to allow the user to upload an image file
 	uploaded_file = st.file_uploader("Upload a file", type = ["tif", "tiff", "png", "jpg", "jpeg"], accept_multiple_files = False, label_visibility = 'collapsed')
