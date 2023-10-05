@@ -1,0 +1,4 @@
+[theme]
+base="light"
+[browser]
+gatherUsageStats = false
