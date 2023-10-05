@@ -156,7 +156,6 @@ def create_dataframe(filtered_labelled_image):
 	# Create lists to store the values
 	ids = []
 	areas = []
-	eccentricities = []
 	eq_diameters = []
 	
 	# Populate lists
@@ -165,15 +164,13 @@ def create_dataframe(filtered_labelled_image):
 			continue  # Skip the region with label 0
 		ids.append(prop.label)
 		areas.append(prop.area)
-		eccentricities.append(prop.eccentricity)
 		eq_diameters.append(prop.equivalent_diameter)
 	
 	# Create DataFrame
 	data = {
-		'ID': ids,
-		'Area': areas,
-		'Equivalent Diameter': eq_diameters,
-		'Eccentricity': eccentricities
+		'Spot ID': ids,
+		'Spot Area': areas,
+		'Spot Diameter': eq_diameters
 		}
 
 	df = pd.DataFrame(data)
