@@ -66,7 +66,7 @@ st.set_page_config(
 # Set the title of the web app
 st.title(':blue[Spot detection for Elispot assay images. Works best for images smaller than 1000x1000 pixels]')
 
-# st.caption('Application screenshots and source code available [here](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis). Sample image to test this application is available [here](https://github.com/ajinkya-kulkarni/PySpatialHistologyAnalysis/blob/main/TestImage.jpeg).', unsafe_allow_html = False)
+st.caption('Application screenshots and source code available [here](https://github.com/ajinkya-kulkarni/PyElispotAnalysis). Sample image to test this application is available [here](https://github.com/ajinkya-kulkarni/PyElispotAnalysis/blob/main/image.tif).', unsafe_allow_html = False)
 
 # Add some vertical space between the title and the next section
 st.markdown("")
