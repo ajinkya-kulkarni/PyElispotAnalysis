@@ -74,7 +74,7 @@ st.markdown("")
 ##########################################################################
 
 # Create a form using the "form" method of Streamlit
-with st.form(key = 'form1', clear_on_submit = True):
+with st.form(key = 'form1', clear_on_submit = False):
 
 	# Add some text explaining what the user should do next
 	st.markdown(':blue[Upload a single Elispot assay image/slide to be analyzed. Works best for images smaller than 1000x1000 pixels.]')
