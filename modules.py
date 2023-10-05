@@ -29,21 +29,22 @@ from cv2 import adaptiveThreshold, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY, cv
 from PIL import Image
 import numpy as np
 from skimage.measure import regionprops
+import pandas as pd
 
 ######################################################################################
 
 def resize_image(image, new_width=674):
 
-    # Calculate the aspect ratio
-    aspect_ratio = float(new_width) / image.shape[1]
-    
-    # Compute new height using aspect_ratio
-    new_height = int(image.shape[0] * aspect_ratio)
-    
-    # Resize the image
-    resized_image = resize(image, (new_width, new_height), interpolation=INTER_AREA)
-    
-    return resized_image
+	# Calculate the aspect ratio
+	aspect_ratio = float(new_width) / image.shape[1]
+	
+	# Compute new height using aspect_ratio
+	new_height = int(image.shape[0] * aspect_ratio)
+	
+	# Resize the image
+	resized_image = resize(image, (new_width, new_height), interpolation=INTER_AREA)
+	
+	return resized_image
 
 ######################################################################################
 
@@ -101,15 +102,19 @@ def counts_spots(labeled_image, grayscale_parent_image, min_area, max_area):
 	Returns:
 	- An image with the detected spots circled.
 	- Count of the detected spots.
+	- A labeled image with only the regions fitting the criteria.
 	"""
 	
-	# Get the RGB values for tab:red from tab10 colormap
-	rgb_color = plt.cm.tab10(1)
+	# Get the RGB values from tab10 colormap
+	rgb_color = plt.cm.tab10(8)
 	# Excluding the alpha value and scaling to [0, 255]
 	scaled_rgb = tuple([int(val * 255) for val in rgb_color[:-1]])
 
 	# Convert to a 3-channel image for drawing colored circles
 	circled_image = cvtColor(grayscale_parent_image, COLOR_GRAY2RGB)
+
+	# Create a blank labeled image to store filtered regions
+	filtered_labelled_image = np.zeros_like(labeled_image, dtype=np.uint16)
 
 	counter = 0
 	label_counter = 1
@@ -121,15 +126,59 @@ def counts_spots(labeled_image, grayscale_parent_image, min_area, max_area):
 			# Draw a circle around the spot using the equivalent diameter
 			y0, x0 = map(int, region.centroid)
 			radius = int(0.5 * region.equivalent_diameter)
-			circle(circled_image, (x0, y0), radius, scaled_rgb, 1)
+			circle(circled_image, (x0, y0), radius, scaled_rgb, 2)
 
 			# Assign the current label to the filtered labels image
 			coords = region.coords
-			label_counter = label_counter + 1
+			filtered_labelled_image[coords[:, 0], coords[:, 1]] = label_counter
+			label_counter += 1
 			
-			counter = counter + 1
+			counter += 1
 	
-	return circled_image, counter
+	return circled_image, counter, filtered_labelled_image
+
+######################################################################################
+
+def create_dataframe(filtered_labelled_image):
+	"""
+	Creates a pandas dataframe from the filtered labelled image.
+	
+	Args:
+	- filtered_labelled_image: A labeled image with regions of interest.
+	
+	Returns:
+	- df: Pandas DataFrame containing ID of the label, area, eccentricity, and equivalent diameter.
+	"""
+	
+	# Extract properties from regions
+	properties = regionprops(filtered_labelled_image)
+	
+	# Create lists to store the values
+	ids = []
+	areas = []
+	eccentricities = []
+	eq_diameters = []
+	
+	# Populate lists
+	for prop in properties:
+		if prop.label == 0:
+			continue  # Skip the region with label 0
+		ids.append(prop.label)
+		areas.append(prop.area)
+		eccentricities.append(prop.eccentricity)
+		eq_diameters.append(prop.equivalent_diameter)
+	
+	# Create DataFrame
+	data = {
+		'ID': ids,
+		'Area': areas,
+		'Equivalent Diameter': eq_diameters,
+		'Eccentricity': eccentricities
+		}
+
+	df = pd.DataFrame(data)
+	
+	return df
 
 ######################################################################################
 
