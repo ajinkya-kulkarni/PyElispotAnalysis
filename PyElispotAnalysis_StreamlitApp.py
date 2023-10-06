@@ -73,143 +73,147 @@ st.markdown("")
 
 ##########################################################################
 
-# Create a form using the "form" method of Streamlit
-with st.form(key = 'form1', clear_on_submit = False):
+# # Create a form using the "form" method of Streamlit
+# with st.form(key = 'form1', clear_on_submit = False):
 
-	# Add some text explaining what the user should do next
-	st.markdown(':blue[Upload a single Elispot assay image/slide to be analyzed.]')
+# Add some text explaining what the user should do next
+st.markdown(':blue[Upload a single Elispot assay image/slide to be analyzed.]')
 
-	# Add a file uploader to allow the user to upload an image file
-	uploaded_file = st.file_uploader("Upload a file", type = ["tif", "tiff", "png", "jpg", "jpeg"], accept_multiple_files = False, label_visibility = 'collapsed')
+# Add a file uploader to allow the user to upload an image file
+uploaded_file = st.file_uploader("Upload a file", type = ["tif", "tiff", "png", "jpg", "jpeg"], accept_multiple_files = False, label_visibility = 'collapsed')
 
-	######################################################################
+######################################################################
 
-	st.markdown("")
+st.markdown("")
 
-	left_column, middle_column1, middle_column2, right_column = st.columns(4)
+left_column, right_column = st.columns(2)
 
-	with left_column:
+with left_column:
 
-		st.slider('Local window size to identify dark spots [pixels]. `\n`Larger values cover broader regions.', min_value = 5, max_value = 101, value = 41, step = 2, format = '%d', label_visibility = "visible", key = '-BlockSizeKey-')
+	st.slider('Local window size to identify dark spots [pixels]. Larger values cover broader regions.', min_value = 5, max_value = 101, value = 31, step = 2, format = '%d', label_visibility = "visible", key = '-BlockSizeKey-')
 
-		BlockSize = int(st.session_state['-BlockSizeKey-'])
+	BlockSize = int(st.session_state['-BlockSizeKey-'])
 
-	with middle_column1:
+with right_column:
 
-		st.slider('Determines sensitivity for detecting dark spots. Lower values detect more spots.', min_value = 2, max_value = 50, value = 10, step = 2, format = '%d', label_visibility = "visible", key = '-ConstantKey-')
+	st.slider('Determines sensitivity for detecting dark spots. Lower values detect more spots.', min_value = 2, max_value = 20, value = 8, step = 2, format = '%d', label_visibility = "visible", key = '-ConstantKey-')
 
-		Constant = int(st.session_state['-ConstantKey-'])
+	Constant = int(st.session_state['-ConstantKey-'])
 
-	with middle_column2:
+left_column, right_column = st.columns(2)
 
-		st.slider('Minimum area of spots in the image [pixels^2]. Should be the average area of the small spots.', min_value = 2, max_value = 50, value = 10, step = 2, format = '%d', label_visibility = "visible", key = '-MinimumAreaKey-')
+with left_column:
 
-		MinimumAreaKey = int(st.session_state['-MinimumAreaKey-'])
+	st.slider('Minimum area of spots in the image [pixels^2]. Should be the average area of the small spots.', min_value = 2, max_value = 50, value = 10, step = 2, format = '%d', label_visibility = "visible", key = '-MinimumAreaKey-')
 
-	with right_column:
+	MinimumAreaKey = int(st.session_state['-MinimumAreaKey-'])
 
-		st.slider('Maximum area of spots in the image [pixels^2]. Should be the average area of the large spots.', min_value = 500, max_value = 2000, value = 1000, step = 100, format = '%d', label_visibility = "visible", key = '-MaximumAreaKey-')
+with right_column:
 
-		MaximumAreaKey = int(st.session_state['-MaximumAreaKey-'])
+	st.slider('Maximum area of spots in the image [pixels^2]. Should be the average area of the large spots.', min_value = 500, max_value = 2000, value = 1000, step = 100, format = '%d', label_visibility = "visible", key = '-MaximumAreaKey-')
 
-	st.markdown("")
+	MaximumAreaKey = int(st.session_state['-MaximumAreaKey-'])
 
-	######################################################################
+######################################################################
 
-	# Add a submit button to the form
-	submitted = st.form_submit_button('Analyze')
+st.markdown("")
 
-	######################################################################
+######################################################################
 
-	# If no file was uploaded, stop processing and exit early
-	if uploaded_file is None:
-		st.stop()
+# # Add a submit button to the form
+# submitted = st.form_submit_button('Analyze')
 
-	######################################################################
+######################################################################
 
-	if submitted:
+# If no file was uploaded, stop processing and exit early
+if uploaded_file is None:
+	st.stop()
 
-		# Read and process the image: convert it to grayscale and scale it
-		img_scaled = read_image(uploaded_file)
+######################################################################
 
-		if img_scaled.shape[0] > allowed_image_size or img_scaled.shape[1] > allowed_image_size:
-			st.error('Uploaded image exceeds the allowed image size. Please reduce the image size to 1000x1000.')
-			st.stop()
+# if submitted:
 
-		# Resize image to suit the UI for image comparision
-		img_scaled = resize_image(img_scaled)
+# Read and process the image: convert it to grayscale and scale it
+img_scaled = read_image(uploaded_file)
 
-		# Segment the processed image to highlight regions of interest
-		mask_image = make_segmented_image(img_scaled, BlockSize, Constant)
+if img_scaled.shape[0] > allowed_image_size or img_scaled.shape[1] > allowed_image_size:
+	st.error('Uploaded image exceeds the allowed image size. Please reduce the image size to 1000x1000.')
+	st.stop()
 
-		# Define a kernel for morphological operations
-		# Erosion helps in detaching closely packed regions
-		kernel_size = (5, 5)
-		kernel = np.ones(kernel_size, np.uint8)
+# Resize image to suit the UI for image comparision
+img_scaled = resize_image(img_scaled)
 
-		# Perform morphological opening on the segmented image
-		# Opening is an operation that consists of erosion followed by dilation
-		# It helps to remove noise and to separate regions that are close to each other
-		opened = morphologyEx(mask_image, MORPH_OPEN, kernel)
+# Segment the processed image to highlight regions of interest
+mask_image = make_segmented_image(img_scaled, BlockSize, Constant)
 
-		# Invert the opened image
-		# This is done so the regions of interest are now considered as foreground (labelled as 1)
-		inverted_opened = 1 - opened
+# Define a kernel for morphological operations
+# Erosion helps in detaching closely packed regions
+kernel_size = (5, 5)
+kernel = np.ones(kernel_size, np.uint8)
 
-		# Label the regions in the inverted image
-		# Each connected component/region gets a unique label
-		labeled_image = label(inverted_opened, connectivity=2)
+# Perform morphological opening on the segmented image
+# Opening is an operation that consists of erosion followed by dilation
+# It helps to remove noise and to separate regions that are close to each other
+opened = morphologyEx(mask_image, MORPH_OPEN, kernel)
 
-		# Use the counts_spots function to draw circles around detected spots
-		# Spots are determined based on the area and eccentricity criteria defined in the function
-		circled_image, counter, filtered_labelled_image = counts_spots(labeled_image, img_scaled, MinimumAreaKey, MaximumAreaKey)
+# Invert the opened image
+# This is done so the regions of interest are now considered as foreground (labelled as 1)
+inverted_opened = 1 - opened
 
-		# # Generate the results figure
-		# result_figure = make_figure(img_scaled, circled_image, counter)
+# Label the regions in the inverted image
+# Each connected component/region gets a unique label
+labeled_image = label(inverted_opened, connectivity=2)
 
-		##############################################################
+# Use the counts_spots function to draw circles around detected spots
+# Spots are determined based on the area and eccentricity criteria defined in the function
+circled_image, counter, filtered_labelled_image = counts_spots(labeled_image, img_scaled, MinimumAreaKey, MaximumAreaKey)
 
-		st.markdown("""---""")
+# # Generate the results figure
+# result_figure = make_figure(img_scaled, circled_image, counter)
 
-		##############################################################
+##############################################################
 
-		st.markdown(f'{counter} spots detected.')
+st.markdown("""---""")
 
-		image_comparison(img1=img_scaled, img2=circled_image, label1="", label2="")
+##############################################################
 
-		##############################################################
+st.markdown(f'{counter} spots detected.')
 
-		st.markdown("""---""")
+image_comparison(img1=img_scaled, img2=circled_image, label1="", label2="")
 
-		st.markdown("Detailed Report")
+##############################################################
 
-		# Collect areas of all regions
-		areas = [region.area for region in regionprops(filtered_labelled_image)]
-		
-		# Plot histogram
-		fig = plt.figure(figsize=(7, 3), dpi = 200)
-		plt.hist(areas, bins='auto', color='tab:blue', alpha=0.8)
-		plt.title('Histogram of detected spots', fontsize=14, pad = 10)
-		plt.xlim(0, )
-		plt.ylim(0, )
-		plt.xlabel('Size of spots (Area)', fontsize=10)
-		plt.ylabel('Number of spots', fontsize=10)
-		plt.xticks(fontsize=8)
-		plt.yticks(fontsize=8)
-		plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+st.markdown("""---""")
 
-		st.pyplot(fig)
+st.markdown("Detailed Report")
 
-		##############################################################
+# Collect areas of all regions
+areas = [region.area for region in regionprops(filtered_labelled_image)]
 
-		st.markdown("""---""")
+# Plot histogram
+fig = plt.figure(figsize=(7, 3), dpi = 200)
+plt.hist(areas, bins='auto', color='tab:blue', alpha=0.8)
+plt.title('Histogram of detected spots', fontsize=14, pad = 10)
+plt.xlim(0, )
+plt.ylim(0, )
+plt.xlabel('Size of spots (Area)', fontsize=10)
+plt.ylabel('Number of spots', fontsize=10)
+plt.xticks(fontsize=8)
+plt.yticks(fontsize=8)
+plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 
-		dataframe = create_dataframe(filtered_labelled_image)
+st.pyplot(fig)
 
-		st.dataframe(dataframe.style.format("{:.2f}"), use_container_width = True)
+##############################################################
 
-		##############################################################
+st.markdown("""---""")
 
-		st.stop()
-		
+dataframe = create_dataframe(filtered_labelled_image)
+
+st.dataframe(dataframe.style.format("{:.2f}"), use_container_width = True)
+
+##############################################################
+
+st.stop()
+
 ##########################################################################
