@@ -100,6 +100,12 @@ with right_column:
 
 	Constant = int(st.session_state['-ConstantKey-'])
 
+######################################################################
+
+st.markdown("")
+
+######################################################################
+
 left_column, right_column = st.columns(2)
 
 with left_column:
@@ -116,7 +122,7 @@ with right_column:
 
 ######################################################################
 
-st.markdown("")
+st.markdown("""---""")
 
 ######################################################################
 
@@ -173,13 +179,24 @@ circled_image, counter, filtered_labelled_image = counts_spots(labeled_image, im
 
 ##############################################################
 
-st.markdown("""---""")
+st.markdown('Results')
 
-##############################################################
+image_comparison(img1=img_scaled, img2=circled_image, label1="", label2="")
 
 st.markdown(f'{counter} spots detected.')
 
-image_comparison(img1=img_scaled, img2=circled_image, label1="", label2="")
+##############################################################
+
+img_pil = Image.fromarray(circled_image)
+
+buf = BytesIO()
+img_pil.save(buf, format="TIFF")
+byte_im = buf.getvalue()
+
+btn = st.download_button(
+      label="Download Segmented Image",
+      data=byte_im,
+      file_name="Result.tif")
 
 ##############################################################
 
@@ -206,11 +223,29 @@ st.pyplot(fig)
 
 ##############################################################
 
-st.markdown("""---""")
+st.markdown("")
 
 dataframe = create_dataframe(filtered_labelled_image)
 
 st.dataframe(dataframe.style.format("{:.2f}"), use_container_width = True)
+
+##############################################################
+
+@st.cache_data
+def convert_df(df):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    return df.to_csv().encode('utf-8')
+
+csv = convert_df(dataframe)
+
+##############################################################
+
+st.download_button(
+    label="Download data as CSV",
+    data=csv,
+    file_name='dataframe.csv',
+    mime='text/csv',
+)
 
 ##############################################################
 
