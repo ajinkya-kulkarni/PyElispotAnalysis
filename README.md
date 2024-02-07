@@ -1,3 +1,9 @@
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://elispotanalysis.streamlit.app/)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![DOI](https://zenodo.org/badge/700845163.svg)](https://zenodo.org/doi/10.5281/zenodo.10630699)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/ajinkya-kulkarni/PyElispotAnalysis)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/ajinkya-kulkarni/PyElispotAnalysis)
+
 # PyElispotAnalysis
 Detecting spots (IFN-Gamma positive cells) from an Elispot assay image
 
